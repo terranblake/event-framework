@@ -1,0 +1,17 @@
+{
+  "name": "@postilion/event-framework",
+  "version": "1.0.0",
+  "description": "event-framework is a nodejs wrapper around MongoDB change streams to support per-collection events based on listeners which define a handler for the event and a set of filters to limit the events to exactly what the handler was built for",
+  "main": "index.js",
+  "repository": "@postilion/event-framework",
+  "dependencies": {
+    "mongoose": "^5.8.2",
+    "nodemon": "^2.0.2"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "MIT"
+}
