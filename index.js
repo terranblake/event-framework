@@ -1,8 +1,8 @@
 const mongoose = require('mongoose');
 
-// If you're not familiar with async/await, check out this article:
-// http://bit.ly/node-async-await
-// run().catch(error => console.error(error));
+const RECONNECT_DELAY = 1000;
+let reconnectMultiplier = 1;
+let latestMongoError = {};
 
 // todo: create class for subscriptions which can be referenced from
 // redis and is linked to the hostname of the subscription creator
@@ -35,17 +35,70 @@ const mongoose = require('mongoose');
 // 		subscriptions array
 // 		service name
 
-async function run() {
+// If you're not familiar with async/await, check out this article:
+// http://bit.ly/node-async-await
+// run().catch(error => console.error(error));
+
+mongoose.connection.on('disconnected', () => {
+	console.log(new Date(), 'disconnected from mongodb');
+	reconnect();
+});
+
+mongoose.connection.on('connected', () => {
+	console.log(new Date(), 'connected to mongodb');
+	createSubscriptions(/* subscriptions array goes here */);
+});
+
+async function start() {
 	// Make sure you're using mongoose >= 5.0.0
 	console.log(new Date(), `mongoose version: ${mongoose.version}`);
 
-	//   comment out because already started
-	//   await setupReplicaSet();
+	// todo: set this up to be used for testing
+	// and have a variant for production
+	// await setupReplicaSet();
 
-	// Connect to the replica set
+	// if imported as a module we need to handle using the
+	// singleton connection object exposed by mongoose
+	if (mongoose.connection.readyState === 1) {
+		return initialize();
+	}
+
+	await connect();
+}
+
+function reconnect() {
+	setTimeout(() => {
+		if(mongoose.connection.readyState === 1) {
+			console.log(new Date(), 'already connected to mongodb. skipping connection attempt');
+			return;
+		}
+
+		console.log(new Date(), 'reconnecting to mongodb');
+		start().catch(err => {
+			latestMongoError = err;
+			reconnectMultiplier = 1;
+			console.error(new Date(), err);
+
+			// delay connect time so we aren't hammering the db with connections
+			if (latestMongoError.name === 'MongoError' && latestMongoError.message.includes('no primary found')) {
+				reconnectMultiplier = 4;
+			}
+		});
+	}, RECONNECT_DELAY * reconnectMultiplier);
+}
+
+async function connect() {
+	console.log(new Date(), 'connecting to mongodb');
 	const uri = 'mongodb://localhost:27017/' + 'fundamentals?replicaSet=rs';
 	await mongoose.connect(uri);
+}
 
+function initialize() {
+	console.log(new Date(), 'connected to mongodb');
+	createSubscriptions(/* subscriptions array goes here */);
+}
+
+async function createSubscriptions(subscriptions = []) {
 	let collections = await mongoose.connection.db.listCollections().toArray();
 	collections = collections.map(c => c.name);
 
@@ -96,3 +149,6 @@ async function setupReplicaSet() {
 	await replSet.start();
 	console.log(new Date(), 'Replica set started...');
 }
+
+// create all changestreams only after mongoose has connected to something
+start().catch(err => console.error(err));
