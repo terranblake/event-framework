@@ -20,7 +20,7 @@ export class EventFramework {
 
 		mongoose.connection.on('connected', () => {
 			console.log(new Date(), 'connected to mongodb');
-			this.createSubscriptions(/* subscriptions array goes here */);
+			this.createSubscriptions(subscriptions);
 		});
 
 		this.start();
@@ -28,7 +28,7 @@ export class EventFramework {
 
 	async initialize() {
 		console.log(new Date(), 'connected to mongodb');
-		await this.createSubscriptions(/* subscriptions array goes here */);
+		await this.createSubscriptions(this.subscriptions);
 	}
 
 	async start() {
@@ -78,7 +78,7 @@ export class EventFramework {
 		let collections = await mongoose.connection.db.listCollections().toArray();
 		collections = collections.map(c => c.name);
 
-		console.log(new Date(), 'found collections', collections.join(', '));
+		// console.log(new Date(), 'found collections', collections.join(', '));
 
 		for (let name of collections) {
 			// get service-defined subscriptions

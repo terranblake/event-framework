@@ -50,7 +50,7 @@ var EventFramework = /** @class */ (function () {
         });
         mongoose.connection.on('connected', function () {
             console.log(new Date(), 'connected to mongodb');
-            _this.createSubscriptions( /* subscriptions array goes here */);
+            _this.createSubscriptions(subscriptions);
         });
         this.start();
     }
@@ -60,7 +60,7 @@ var EventFramework = /** @class */ (function () {
                 switch (_a.label) {
                     case 0:
                         console.log(new Date(), 'connected to mongodb');
-                        return [4 /*yield*/, this.createSubscriptions( /* subscriptions array goes here */)];
+                        return [4 /*yield*/, this.createSubscriptions(this.subscriptions)];
                     case 1:
                         _a.sent();
                         return [2 /*return*/];
@@ -134,7 +134,6 @@ var EventFramework = /** @class */ (function () {
                     case 1:
                         collections = _a.sent();
                         collections = collections.map(function (c) { return c.name; });
-                        console.log(new Date(), 'found collections', collections.join(', '));
                         _loop_1 = function (name_1) {
                             var collectionSubscriptions, Collection, _i, collectionSubscriptions_1, _a, filters, handler, operation, options;
                             return __generator(this, function (_b) {
