@@ -44,7 +44,12 @@ const subscriptions: Array<Subscription> = [
 const eventFramework = new EventFramework('mongodb://user:pass@localhost/db', subscriptions);
 ```
 
-4. 💃🍺
+4. Change a document in a collection you've created a subscription for
+```javascript
+db.collection.insert({ ... })
+```
+
+5. The handler attached to each matching subscription should receive an event
 ```javascript
 { _id:
    { _data:
@@ -53,15 +58,15 @@ const eventFramework = new EventFramework('mongodb://user:pass@localhost/db', su
         sub_type: 0,
         position: 49,
         buffer:
-         <Buffer 82 5d fe b6 fd 00 00 00 01 46 64 5f 69 64 00 64 5d fe b6 fd 8e 3f 81 a7 a8 78 9c fe 00 5a 10 04 e2 36 af 04 13 23 42 ca 8f 95 61 89 48 09 49 68 04> } },
+         <Buffer 82 5d fe b6 ... 09 49 68 04> } },
   operationType: 'insert',
   fullDocument:
-   { _id: 5dfeb6fd8e3f81a7a8789cfe,
+   { _id: 3123,
      prefix: 'us-test',
      name: 'Test',
      version: '0001' },
   ns: { db: 'fundamentals', coll: 'identifiers' },
-  documentKey: { _id: 5dfeb6fd8e3f81a7a8789cfe } }
+  documentKey: { _id: 3123 } }
 ```
 
 ## Contributing
