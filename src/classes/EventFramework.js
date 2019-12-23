@@ -37,9 +37,11 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 exports.__esModule = true;
 var mongoose = require("mongoose");
+var Bull = require('bull');
 var EventFramework = /** @class */ (function () {
     function EventFramework(url, subscriptions) {
         var _this = this;
+        this.queues = [];
         this.RECONNECT_DELAY = 1000;
         this.reconnectMultiplier = 1;
         this.url = url;
@@ -97,7 +99,7 @@ var EventFramework = /** @class */ (function () {
                 switch (_a.label) {
                     case 0:
                         console.log(new Date(), 'connecting to mongodb');
-                        return [4 /*yield*/, mongoose.connect(this.url)];
+                        return [4 /*yield*/, mongoose.connect(this.url)["catch"](console.error)];
                     case 1:
                         _a.sent();
                         return [2 /*return*/];
@@ -126,6 +128,42 @@ var EventFramework = /** @class */ (function () {
     };
     EventFramework.prototype.createSubscriptions = function (subscriptions) {
         if (subscriptions === void 0) { subscriptions = []; }
+        return __awaiter(this, void 0, void 0, function () {
+            var namedSubscriptions, collectionSubscriptions;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        namedSubscriptions = subscriptions.filter(function (s) { return s.operation === 'named'; });
+                        collectionSubscriptions = subscriptions.filter(function (s) { return s.operation !== 'named'; });
+                        // create a mongodb change stream for each subscription
+                        return [4 /*yield*/, this.createChangeStreams(collectionSubscriptions)];
+                    case 1:
+                        // create a mongodb change stream for each subscription
+                        _a.sent();
+                        return [4 /*yield*/, this.createNamedQueues(namedSubscriptions)];
+                    case 2:
+                        _a.sent();
+                        return [2 /*return*/];
+                }
+            });
+        });
+    };
+    EventFramework.prototype.createNamedQueues = function (subscriptions) {
+        return __awaiter(this, void 0, void 0, function () {
+            var _i, subscriptions_1, subscription, namedQueue;
+            return __generator(this, function (_a) {
+                // todo: create bull queues with the name and handler provided in the subscription
+                for (_i = 0, subscriptions_1 = subscriptions; _i < subscriptions_1.length; _i++) {
+                    subscription = subscriptions_1[_i];
+                    namedQueue = new Bull(subscription.name);
+                    namedQueue.process(subscription.handler);
+                    this.queues.push(namedQueue);
+                }
+                return [2 /*return*/];
+            });
+        });
+    };
+    EventFramework.prototype.createChangeStreams = function (subscriptions) {
         return __awaiter(this, void 0, void 0, function () {
             var collections, _loop_1, _i, collections_1, name_1;
             return __generator(this, function (_a) {
@@ -156,6 +194,9 @@ var EventFramework = /** @class */ (function () {
                                         // pipelines have their own unique change streams
                                         // regular mongo queries are either converted to pipelines
                                         // 		or use the same change stream for receiving events
+                                        // todo: remove duplicated change streams by comparing filters
+                                        // and simply add another handler for an existing change stream
+                                        // todo: push all changes from every model into an event stream data model
                                         // create a change stream for each subscription
                                         for (_i = 0, collectionSubscriptions_1 = collectionSubscriptions; _i < collectionSubscriptions_1.length; _i++) {
                                             _a = collectionSubscriptions_1[_i], filters = _a.filters, handler = _a.handler, operation = _a.operation, options = _a.options;
