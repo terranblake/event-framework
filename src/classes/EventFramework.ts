@@ -3,9 +3,9 @@ import { Queue } from 'bull';
 
 const Bull = require('bull');
 
-import { Subscription } from '../interfaces/ISubscription';
+import { default as Subscription } from '../interfaces/ISubscription';
 
-export class EventFramework {
+export default class EventFramework {
 	url: string;
 	subscriptions: Array<Subscription>;
 	queues: Array<Queue> = [];

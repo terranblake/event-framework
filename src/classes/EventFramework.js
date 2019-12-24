@@ -226,4 +226,4 @@ var EventFramework = /** @class */ (function () {
     };
     return EventFramework;
 }());
-exports.EventFramework = EventFramework;
+exports["default"] = EventFramework;

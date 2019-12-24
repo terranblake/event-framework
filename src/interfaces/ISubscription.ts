@@ -1,6 +1,8 @@
-export interface Subscription {
+import { Model } from "mongoose";
+
+export default interface Subscription {
 	name: string,
-	model: string,
+	model: Model<any, {}>,
 	// define set of operations that can be used
 	operation: string,
 	// todo: define a model for jobs

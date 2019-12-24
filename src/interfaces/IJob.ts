@@ -1,8 +1,11 @@
+import { Model } from "mongoose";
+import Operation from "./IOperation";
+
 export interface Job {
 	id: String,
 	name: string,
-	model: string,
+	model: Model<any, {}>,
 	// define set of operations that can be used
-	operation: string,
+	operation: Operation,
 	data: Object
 }

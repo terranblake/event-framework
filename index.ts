@@ -1,11 +1,4 @@
-const Queue = require('bull');
-import * as framework from './src/classes/EventFramework';
-
-import { Subscription } from './src/interfaces/ISubscription';
-const { EventFramework } = framework;
-
-export {
-	EventFramework,
-	Queue,
-	Subscription
-};
+export { default as EventFramework } from './src/classes/EventFramework';
+export { default as Subscription } from './src/interfaces/ISubscription';
+export { default as Operation } from './src/interfaces/IOperation';
+export { default as Job } from './src/interfaces/IJob';
