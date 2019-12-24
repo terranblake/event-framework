@@ -105,7 +105,7 @@ export default class EventFramework {
 	
 		for (let name of collections) {
 			// get service-defined subscriptions
-			const collectionSubscriptions = subscriptions.filter(s => s.model === name);
+			const collectionSubscriptions = subscriptions.filter(s => s.model.modelName.toLowerCase() === name);
 			if (!collectionSubscriptions.length) {
 				console.log(new Date(), 'no subscriptions for collection', name);
 				continue;
