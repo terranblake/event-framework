@@ -91,6 +91,7 @@ export default class EventFramework {
 
 	private async createNamedQueues(subscriptions: Array<Subscription>) {
 		// todo: create bull queues with the name and handler provided in the subscription
+		// todo: provide more context to named queues with primary model of focus
 		for (let subscription of subscriptions) {
 			const namedQueue = new Bull(subscription.name);
 			namedQueue.process(subscription.handler);
@@ -105,7 +106,7 @@ export default class EventFramework {
 	
 		for (let name of collections) {
 			// get service-defined subscriptions
-			const collectionSubscriptions = subscriptions.filter(s => s.model.modelName.toLowerCase() === name);
+			const collectionSubscriptions = subscriptions.filter(s => s.model.modelName && s.model.modelName.toLowerCase() === name);
 			if (!collectionSubscriptions.length) {
 				console.log(new Date(), 'no subscriptions for collection', name);
 				continue;

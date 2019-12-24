@@ -1,7 +1,7 @@
 import { Model } from "mongoose";
 import Operation from "./IOperation";
 
-export interface Job {
+export default interface Job {
 	id: String,
 	name: string,
 	model: Model<any, {}>,

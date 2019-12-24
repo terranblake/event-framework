@@ -153,6 +153,7 @@ var EventFramework = /** @class */ (function () {
             var _i, subscriptions_1, subscription, namedQueue;
             return __generator(this, function (_a) {
                 // todo: create bull queues with the name and handler provided in the subscription
+                // todo: provide more context to named queues with primary model of focus
                 for (_i = 0, subscriptions_1 = subscriptions; _i < subscriptions_1.length; _i++) {
                     subscription = subscriptions_1[_i];
                     namedQueue = new Bull(subscription.name);
@@ -177,7 +178,7 @@ var EventFramework = /** @class */ (function () {
                             return __generator(this, function (_b) {
                                 switch (_b.label) {
                                     case 0:
-                                        collectionSubscriptions = subscriptions.filter(function (s) { return s.model === name_1; });
+                                        collectionSubscriptions = subscriptions.filter(function (s) { return s.model.modelName && s.model.modelName.toLowerCase() === name_1; });
                                         if (!collectionSubscriptions.length) {
                                             console.log(new Date(), 'no subscriptions for collection', name_1);
                                             return [2 /*return*/, "continue"];
