@@ -1,10 +1,10 @@
 enum Operation {
-	create = 1,
-	update,
-	delete,
+	create = "change",
+	update = "change",
+	delete = "change",
 	// queue that isn't based
 	// on a Document being modified
-	named
+	named = "named"
 }
 
 export default Operation;

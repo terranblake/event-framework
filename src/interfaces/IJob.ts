@@ -7,5 +7,5 @@ export default interface Job {
 	model: Model<any, {}>,
 	// define set of operations that can be used
 	operation: Operation,
-	data: Object
+	data: any
 }
