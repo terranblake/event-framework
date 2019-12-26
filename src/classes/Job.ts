@@ -1,6 +1,8 @@
 import { Model } from "mongoose";
 import * as uuid from 'uuid';
 
+const uuidTime = require('uuid-time');
+
 import { default as IJob } from '../interfaces/IJob';
 
 export default class Job implements IJob {
@@ -19,7 +21,13 @@ export default class Job implements IJob {
 		this.data = data;
 	}
 
+	// generate a time-based identifier
 	static generate(): string {
 		return uuid.v1();
+	}
+
+	// get the date from the provided id
+	static createdAt(id: string): Date {
+		return new Date(uuidTime.v1(id));
 	}
 }
