@@ -148,6 +148,9 @@ var EventFramework = /** @class */ (function () {
         }, this.RECONNECT_DELAY * this.reconnectMultiplier);
     };
     EventFramework.convertFiltersToPipeline = function (filters) {
+        if (!filters.length) {
+            return [];
+        }
         for (var i in filters) {
             var stage = filters[i];
             var expressions = Object.keys(stage);
@@ -268,7 +271,7 @@ var EventFramework = /** @class */ (function () {
                                             // since mongodb isn't smart enough to figure out how to do that?
                                             filters = EventFramework.convertFiltersToPipeline(filters);
                                             // create change stream
-                                            utils_1.logger.info("created new change stream " + name_3 + " for operation " + operation + " on model " + model.modelName);
+                                            utils_1.logger.info("created new change stream " + name_3 + " with filters " + JSON.stringify(filters));
                                             Collection.watch(filters, streamOptions).on(operation, function (job) {
                                                 return __awaiter(this, void 0, void 0, function () {
                                                     var jobData, formattedJob;

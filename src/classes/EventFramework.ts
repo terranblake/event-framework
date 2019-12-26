@@ -91,6 +91,10 @@ export default class EventFramework {
 	}
 
 	static convertFiltersToPipeline(filters: Array<any>): Array<any> {
+		if (!filters.length) {
+			return [];
+		}
+
 		for (let i in filters) {
 			const stage = filters[i];
 			const expressions = Object.keys(stage);
@@ -204,7 +208,7 @@ export default class EventFramework {
 				filters = EventFramework.convertFiltersToPipeline(filters);
 
 				// create change stream
-				logger.info(`created new change stream ${name} for operation ${operation} on model ${model.modelName}`);
+				logger.info(`created new change stream ${name} with filters ${JSON.stringify(filters)}`);
 				Collection.watch(filters, streamOptions).on(operation,
 					async function (job: any) {
 						if (!job.fullDocument) {
