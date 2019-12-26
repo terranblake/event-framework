@@ -19,6 +19,7 @@
     "uuid-time": "^1.0.0"
   },
   "scripts": {
+    "clean": "rm -rf node_modules && rm package-lock.json && npm install",
     "push:publish": "git push && npm publish",
     "build": "tsc ./index.ts",
     "test": "echo \"Error: no test specified\" && exit 1"

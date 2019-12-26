@@ -110,8 +110,11 @@ export default class EventFramework {
 				if (field.includes('fullDocument')) {
 					continue;
 				}
-
-				filters[i][expressions[0]][field] = `fullDocument.${field}`;
+		
+				const value = filters[i][expressions[0]][field];
+				delete filters[i][expressions[0]][field];
+		
+				filters[i][expressions[0]][`fullDocument.${field}`] = value;
 			}
 		}
 

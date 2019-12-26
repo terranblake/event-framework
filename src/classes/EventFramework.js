@@ -165,7 +165,9 @@ var EventFramework = /** @class */ (function () {
                 if (field.includes('fullDocument')) {
                     continue;
                 }
-                filters[i][expressions[0]][field] = "fullDocument." + field;
+                var value = filters[i][expressions[0]][field];
+                delete filters[i][expressions[0]][field];
+                filters[i][expressions[0]]["fullDocument." + field] = value;
             }
         }
         return filters;
