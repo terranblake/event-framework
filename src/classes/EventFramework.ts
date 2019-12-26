@@ -101,7 +101,7 @@ export default class EventFramework {
 			namedQueue.process(
 				async function (job: any) {
 					logger.info(`received job from ${subscription.name} with id ${job.id}`);
-					await subscription.handler;
+					subscription.handler(job);
 				}
 			);
 			this.queues.push(namedQueue);
