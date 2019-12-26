@@ -153,23 +153,20 @@ var EventFramework = /** @class */ (function () {
     EventFramework.prototype.createNamedQueues = function (subscriptions) {
         return __awaiter(this, void 0, void 0, function () {
             var _loop_1, this_1, _i, subscriptions_1, subscription;
-            var _this = this;
             return __generator(this, function (_a) {
                 _loop_1 = function (subscription) {
                     var namedQueue = new Bull(subscription.name);
                     utils_1.logger.info("created new named queue " + subscription.name + " for operation " + subscription.operation + " on model " + subscription.model.modelName);
-                    namedQueue.process(function (job) { return __awaiter(_this, void 0, void 0, function () {
-                        return __generator(this, function (_a) {
-                            switch (_a.label) {
-                                case 0:
-                                    utils_1.logger.info("received job from " + subscription.name + " with id " + job.id);
-                                    return [4 /*yield*/, subscription.handler];
-                                case 1:
-                                    _a.sent();
-                                    return [2 /*return*/];
-                            }
+                    namedQueue.process(function (job) {
+                        return __awaiter(this, void 0, void 0, function () {
+                            return __generator(this, function (_a) {
+                                utils_1.logger.info("received job from " + subscription.name + " with id " + job.id);
+                                subscription.handler(job);
+                                return [2 /*return*/];
+                            });
                         });
-                    }); });
+                    });
+                    namedQueue.on('completed', function (job, result) { return utils_1.logger.info; });
                     this_1.queues.push(namedQueue);
                 };
                 this_1 = this;
@@ -193,7 +190,7 @@ var EventFramework = /** @class */ (function () {
                         collections = _a.sent();
                         collections = collections.map(function (c) { return c.name; });
                         _loop_2 = function (name_1) {
-                            var collectionSubscriptions, Collection, _i, collectionSubscriptions_1, _a, filters, handler, operation, options;
+                            var collectionSubscriptions, Collection, _i, collectionSubscriptions_1, _a, name_2, filters, handler, operation, options, model;
                             return __generator(this, function (_b) {
                                 switch (_b.label) {
                                     case 0:
@@ -219,9 +216,9 @@ var EventFramework = /** @class */ (function () {
                                         // todo: push all changes from every model into an event stream data model
                                         // create a change stream for each subscription
                                         for (_i = 0, collectionSubscriptions_1 = collectionSubscriptions; _i < collectionSubscriptions_1.length; _i++) {
-                                            _a = collectionSubscriptions_1[_i], filters = _a.filters, handler = _a.handler, operation = _a.operation, options = _a.options;
+                                            _a = collectionSubscriptions_1[_i], name_2 = _a.name, filters = _a.filters, handler = _a.handler, operation = _a.operation, options = _a.options, model = _a.model;
                                             // create change stream
-                                            utils_1.logger.info("creating change stream for collection " + name_1 + " on operation " + operation);
+                                            utils_1.logger.info("created new change stream " + name_2 + " for operation " + operation + " on model " + model.modelName);
                                             Collection.watch(filters, options).on(operation, handler);
                                         }
                                         return [2 /*return*/];

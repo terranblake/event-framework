@@ -104,6 +104,9 @@ export default class EventFramework {
 					subscription.handler(job);
 				}
 			);
+
+			namedQueue.on('completed', (job, result) => logger.info)
+
 			this.queues.push(namedQueue);
 		}
 	}
@@ -140,9 +143,9 @@ export default class EventFramework {
 			// todo: push all changes from every model into an event stream data model
 	
 			// create a change stream for each subscription
-			for (let { filters, handler, operation, options } of collectionSubscriptions) {
+			for (let { name, filters, handler, operation, options, model } of collectionSubscriptions) {
 				// create change stream
-				logger.info(`creating change stream for collection ${name} on operation ${operation}`);
+				logger.info(`created new change stream ${name} for operation ${operation} on model ${model.modelName}`);
 				Collection.watch(filters, options).on(operation, handler);
 			}
 		}
