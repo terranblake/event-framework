@@ -27,7 +27,7 @@ export default class Job implements IJob {
 	}
 
 	// get the date from the provided id
-	static createdAt(id: string): Date {
+	public static createdAt(id: string): Date {
 		return new Date(uuidTime.v1(id));
 	}
 }
