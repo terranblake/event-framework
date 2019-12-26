@@ -38,6 +38,8 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 exports.__esModule = true;
 var mongoose = require("mongoose");
 var Bull = require('bull');
+var pluralize = require('pluralize');
+var utils_1 = require("@postilion/utils");
 var EventFramework = /** @class */ (function () {
     function EventFramework(url, subscriptions) {
         var _this = this;
@@ -47,11 +49,11 @@ var EventFramework = /** @class */ (function () {
         this.url = url;
         this.subscriptions = subscriptions;
         mongoose.connection.on('disconnected', function () {
-            console.log(new Date(), 'disconnected from mongodb');
+            utils_1.logger.info(new Date(), 'disconnected from mongodb');
             _this.reconnect();
         });
         mongoose.connection.on('connected', function () {
-            console.log(new Date(), 'connected to mongodb');
+            utils_1.logger.info(new Date(), 'connected to mongodb');
             _this.createSubscriptions(subscriptions);
         });
         this.start();
@@ -61,7 +63,7 @@ var EventFramework = /** @class */ (function () {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        console.log(new Date(), 'connected to mongodb');
+                        utils_1.logger.info(new Date(), 'connected to mongodb');
                         return [4 /*yield*/, this.createSubscriptions(this.subscriptions)];
                     case 1:
                         _a.sent();
@@ -76,7 +78,7 @@ var EventFramework = /** @class */ (function () {
                 switch (_a.label) {
                     case 0:
                         // Make sure you're using mongoose >= 5.0.0
-                        console.log(new Date(), "mongoose version: " + mongoose.version);
+                        utils_1.logger.info(new Date(), "mongoose version: " + mongoose.version);
                         // todo: set this up to be used for testing
                         // and have a variant for production
                         // await setupReplicaSet();
@@ -98,7 +100,7 @@ var EventFramework = /** @class */ (function () {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        console.log(new Date(), 'connecting to mongodb');
+                        utils_1.logger.info(new Date(), 'connecting to mongodb');
                         return [4 /*yield*/, mongoose.connect(this.url)["catch"](console.error)];
                     case 1:
                         _a.sent();
@@ -111,10 +113,10 @@ var EventFramework = /** @class */ (function () {
         var _this = this;
         setTimeout(function () {
             if (mongoose.connection.readyState === 1) {
-                console.log(new Date(), 'already connected to mongodb. skipping connection attempt');
+                utils_1.logger.info(new Date(), 'already connected to mongodb. skipping connection attempt');
                 return;
             }
-            console.log(new Date(), 'reconnecting to mongodb');
+            utils_1.logger.info(new Date(), 'reconnecting to mongodb');
             _this.start()["catch"](function (err) {
                 _this.latestMongoError = err;
                 _this.reconnectMultiplier = 1;
@@ -150,15 +152,32 @@ var EventFramework = /** @class */ (function () {
     };
     EventFramework.prototype.createNamedQueues = function (subscriptions) {
         return __awaiter(this, void 0, void 0, function () {
-            var _i, subscriptions_1, subscription, namedQueue;
+            var _loop_1, this_1, _i, subscriptions_1, subscription;
+            var _this = this;
             return __generator(this, function (_a) {
+                _loop_1 = function (subscription) {
+                    var namedQueue = new Bull(subscription.name);
+                    utils_1.logger.info("created new named queue " + subscription.name + " for operation " + subscription.operation + " on model " + subscription.model.modelName);
+                    namedQueue.process(function (job) { return __awaiter(_this, void 0, void 0, function () {
+                        return __generator(this, function (_a) {
+                            switch (_a.label) {
+                                case 0:
+                                    utils_1.logger.info("received job from " + subscription.name + " with id " + job.id);
+                                    return [4 /*yield*/, subscription.handler];
+                                case 1:
+                                    _a.sent();
+                                    return [2 /*return*/];
+                            }
+                        });
+                    }); });
+                    this_1.queues.push(namedQueue);
+                };
+                this_1 = this;
                 // todo: create bull queues with the name and handler provided in the subscription
                 // todo: provide more context to named queues with primary model of focus
                 for (_i = 0, subscriptions_1 = subscriptions; _i < subscriptions_1.length; _i++) {
                     subscription = subscriptions_1[_i];
-                    namedQueue = new Bull(subscription.name);
-                    namedQueue.process(subscription.handler);
-                    this.queues.push(namedQueue);
+                    _loop_1(subscription);
                 }
                 return [2 /*return*/];
             });
@@ -166,21 +185,21 @@ var EventFramework = /** @class */ (function () {
     };
     EventFramework.prototype.createChangeStreams = function (subscriptions) {
         return __awaiter(this, void 0, void 0, function () {
-            var collections, _loop_1, _i, collections_1, name_1;
+            var collections, _loop_2, _i, collections_1, name_1;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, mongoose.connection.db.listCollections().toArray()];
                     case 1:
                         collections = _a.sent();
                         collections = collections.map(function (c) { return c.name; });
-                        _loop_1 = function (name_1) {
+                        _loop_2 = function (name_1) {
                             var collectionSubscriptions, Collection, _i, collectionSubscriptions_1, _a, filters, handler, operation, options;
                             return __generator(this, function (_b) {
                                 switch (_b.label) {
                                     case 0:
-                                        collectionSubscriptions = subscriptions.filter(function (s) { return s.model.modelName && s.model.modelName.toLowerCase() === name_1; });
+                                        collectionSubscriptions = subscriptions.filter(function (s) { return String(pluralize(s.model.modelName)).toLowerCase() === name_1; });
                                         if (!collectionSubscriptions.length) {
-                                            console.log(new Date(), 'no subscriptions for collection', name_1);
+                                            utils_1.logger.info("no subscriptions for collection " + name_1);
                                             return [2 /*return*/, "continue"];
                                         }
                                         return [4 /*yield*/, mongoose.connection.db.collection(name_1)];
@@ -202,6 +221,7 @@ var EventFramework = /** @class */ (function () {
                                         for (_i = 0, collectionSubscriptions_1 = collectionSubscriptions; _i < collectionSubscriptions_1.length; _i++) {
                                             _a = collectionSubscriptions_1[_i], filters = _a.filters, handler = _a.handler, operation = _a.operation, options = _a.options;
                                             // create change stream
+                                            utils_1.logger.info("creating change stream for collection " + name_1 + " on operation " + operation);
                                             Collection.watch(filters, options).on(operation, handler);
                                         }
                                         return [2 /*return*/];
@@ -213,7 +233,7 @@ var EventFramework = /** @class */ (function () {
                     case 2:
                         if (!(_i < collections_1.length)) return [3 /*break*/, 5];
                         name_1 = collections_1[_i];
-                        return [5 /*yield**/, _loop_1(name_1)];
+                        return [5 /*yield**/, _loop_2(name_1)];
                     case 3:
                         _a.sent();
                         _a.label = 4;

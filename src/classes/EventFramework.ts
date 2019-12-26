@@ -2,7 +2,9 @@ import * as mongoose from 'mongoose';
 import { Queue } from 'bull';
 
 const Bull = require('bull');
+const pluralize = require('pluralize');
 
+import { logger } from '@postilion/utils';
 import { default as Subscription } from '../interfaces/ISubscription';
 
 export default class EventFramework {
@@ -19,12 +21,12 @@ export default class EventFramework {
 		this.subscriptions = subscriptions;
 
 		mongoose.connection.on('disconnected', () => {
-			console.log(new Date(), 'disconnected from mongodb');
+			logger.info(new Date(), 'disconnected from mongodb');
 			this.reconnect();
 		});
 
 		mongoose.connection.on('connected', () => {
-			console.log(new Date(), 'connected to mongodb');
+			logger.info(new Date(), 'connected to mongodb');
 			this.createSubscriptions(subscriptions);
 		});
 
@@ -32,13 +34,13 @@ export default class EventFramework {
 	}
 
 	private async initialize() {
-		console.log(new Date(), 'connected to mongodb');
+		logger.info(new Date(), 'connected to mongodb');
 		await this.createSubscriptions(this.subscriptions);
 	}
 
 	async start() {
 		// Make sure you're using mongoose >= 5.0.0
-		console.log(new Date(), `mongoose version: ${mongoose.version}`);
+		logger.info(new Date(), `mongoose version: ${mongoose.version}`);
 
 		// todo: set this up to be used for testing
 		// and have a variant for production
@@ -54,18 +56,18 @@ export default class EventFramework {
 	}
 
 	private async connect() {
-		console.log(new Date(), 'connecting to mongodb');
+		logger.info(new Date(), 'connecting to mongodb');
 		await mongoose.connect(this.url).catch(console.error);
 	}
 
 	reconnect() {
 		setTimeout(() => {
 			if (mongoose.connection.readyState === 1) {
-				console.log(new Date(), 'already connected to mongodb. skipping connection attempt');
+				logger.info(new Date(), 'already connected to mongodb. skipping connection attempt');
 				return;
 			}
 
-			console.log(new Date(), 'reconnecting to mongodb');
+			logger.info(new Date(), 'reconnecting to mongodb');
 			this.start().catch((err: Error) => {
 				this.latestMongoError = err;
 				this.reconnectMultiplier = 1;
@@ -94,8 +96,14 @@ export default class EventFramework {
 		// todo: provide more context to named queues with primary model of focus
 		for (let subscription of subscriptions) {
 			const namedQueue = new Bull(subscription.name);
-			namedQueue.process(subscription.handler);
-	
+			logger.info(`created new named queue ${subscription.name} for operation ${subscription.operation} on model ${subscription.model.modelName}`);
+			
+			namedQueue.process(
+				async function (job: any) {
+					logger.info(`received job from ${subscription.name} with id ${job.id}`);
+					await subscription.handler;
+				}
+			);
 			this.queues.push(namedQueue);
 		}
 	}
@@ -106,9 +114,9 @@ export default class EventFramework {
 	
 		for (let name of collections) {
 			// get service-defined subscriptions
-			const collectionSubscriptions = subscriptions.filter(s => s.model.modelName && s.model.modelName.toLowerCase() === name);
+			const collectionSubscriptions = subscriptions.filter(s => String(pluralize(s.model.modelName)).toLowerCase() === name);
 			if (!collectionSubscriptions.length) {
-				console.log(new Date(), 'no subscriptions for collection', name);
+				logger.info(`no subscriptions for collection ${name}`);
 				continue;
 			}
 	
@@ -134,6 +142,7 @@ export default class EventFramework {
 			// create a change stream for each subscription
 			for (let { filters, handler, operation, options } of collectionSubscriptions) {
 				// create change stream
+				logger.info(`creating change stream for collection ${name} on operation ${operation}`);
 				Collection.watch(filters, options).on(operation, handler);
 			}
 		}
