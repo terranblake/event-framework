@@ -6,6 +6,7 @@ const pluralize = require('pluralize');
 
 import { logger } from '@postilion/utils';
 import { default as Subscription } from '../interfaces/ISubscription';
+import Job from './Job';
 
 export default class EventFramework {
 	url: string;
@@ -13,6 +14,14 @@ export default class EventFramework {
 	queues: Array<Queue> = [];
 
 	readonly RECONNECT_DELAY: number = 1000;
+	readonly DEFAULT_QUEUE_OPTIONS: object = {
+		filters: [],
+		options: {}
+	}
+	readonly MANDATORY_STREAM_OPTIONS: object = {
+		fullDocument: 'updateLookup'
+	};
+
 	private reconnectMultiplier: number = 1;
 	private latestMongoError: Error;
 
@@ -81,13 +90,45 @@ export default class EventFramework {
 		}, this.RECONNECT_DELAY * this.reconnectMultiplier);
 	}
 
+	static convertFiltersToPipeline(filters: Array<any>): Array<any> {
+		for (let i in filters) {
+			const stage = filters[i];
+			const expressions = Object.keys(stage);
+
+			// only get the first expression
+			// because i haven't used a filters
+			// with more than 1 expression
+			const expression = stage[expressions[0]];
+
+			// todo: add support for more complex
+			// filters that have nested expressions
+			for (let field of Object.keys(expression)) {
+				if (field.includes('fullDocument')) {
+					continue;
+				}
+
+				filters[i][expressions[0]][field] = `fullDocument.${field}`;
+			}
+		}
+
+		return filters
+	}
+
 	private async createSubscriptions(subscriptions: Array<Subscription> = []) {
-		// todo: handle named operation type
+		// todo: handle named operation type more elegantly
 		let namedSubscriptions: Array<Subscription> = subscriptions.filter(s => s.operation === 'named');
 		let collectionSubscriptions: Array<Subscription> = subscriptions.filter(s => s.operation !== 'named');
 
 		// create a mongodb change stream for each subscription
-		await this.createChangeStreams(collectionSubscriptions)
+		// todo: combine both routes into single function which
+		// uses existing formatting to pushes all jobs onto a
+		// queue with a consistent format
+		// todo: figure out how to determine which services are
+		// listening for which collections, with what operation
+		// and with what filters
+		await this.createChangeStreams(collectionSubscriptions);
+
+		// create a bull queue for each named subscription
 		await this.createNamedQueues(namedSubscriptions);
 	}
 
@@ -95,13 +136,18 @@ export default class EventFramework {
 		// todo: create bull queues with the name and handler provided in the subscription
 		// todo: provide more context to named queues with primary model of focus
 		for (let subscription of subscriptions) {
-			const namedQueue = new Bull(subscription.name);
-			logger.info(`created new named queue ${subscription.name} for operation ${subscription.operation} on model ${subscription.model.modelName}`);
+			const { name, operation, model, handler } = subscription;
+
+			const namedQueue = new Bull(name);
+			logger.info(`created new named queue ${name} for operation ${operation} on model ${model.modelName}`);
 
 			namedQueue.process(
 				async function (job: any) {
-					logger.info(`received job for ${subscription.name} with id ${job.id}`);
-					subscription.handler(job);
+					const jobData = JSON.parse(JSON.stringify(job.data));
+					const formattedJob = new Job(name, model, operation, jobData);
+
+					logger.info(`received job for ${name} from named queue`);
+					handler(formattedJob);
 				}
 			);
 
@@ -112,10 +158,10 @@ export default class EventFramework {
 	}
 
 	private async createChangeStreams(subscriptions: Array<Subscription>) {
-		let collections = await mongoose.connection.db.listCollections().toArray();
-		collections = collections.map(c => c.name);
+		let collections: Array<mongoose.Collection> = await mongoose.connection.db.listCollections().toArray();
+		const collectionNames: Array<string> = collections.map(c => c.name);
 
-		for (let name of collections) {
+		for (let name of collectionNames) {
 			// get service-defined subscriptions
 			const collectionSubscriptions = subscriptions.filter(s => String(pluralize(s.model.modelName)).toLowerCase() === name);
 			if (!collectionSubscriptions.length) {
@@ -144,12 +190,32 @@ export default class EventFramework {
 
 			// create a change stream for each subscription
 			for (let { name, filters, handler, operation, options, model } of collectionSubscriptions) {
+				// make sure that we are always including the
+				// fullDocument option for consistency
+				// and have default filters and options
+				const streamOptions: object = {
+					...this.DEFAULT_QUEUE_OPTIONS,
+					...options,
+					...this.MANDATORY_STREAM_OPTIONS,
+				};
+
+				// reformat raw filters to use the format `fullDocument.FIELD`
+				// since mongodb isn't smart enough to figure out how to do that?
+				filters = EventFramework.convertFiltersToPipeline(filters);
+
 				// create change stream
 				logger.info(`created new change stream ${name} for operation ${operation} on model ${model.modelName}`);
-				Collection.watch(filters, options).on(operation,
-					async function (job) {
+				Collection.watch(filters, streamOptions).on(operation,
+					async function (job: any) {
+						if (!job.fullDocument) {
+							throw new Error(`change stream job was missing reference to fullDocument. failing immediately`);
+						}
+
+						const jobData = JSON.parse(JSON.stringify(job.fullDocument));
+						const formattedJob = new Job(name, model, operation, jobData);
+
 						logger.info(`received job for ${name} from change stream`);
-						handler(job);
+						handler(formattedJob);
 					}
 				);
 			}

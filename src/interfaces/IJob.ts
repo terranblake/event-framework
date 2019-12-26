@@ -1,11 +1,12 @@
 import { Model } from "mongoose";
-import Operation from "./IOperation";
+import Operation from "../enums/IOperation";
 
 export default interface Job {
-	id: String,
+	id: string,
 	name: string,
 	model: Model<any, {}>,
 	// define set of operations that can be used
-	operation: Operation,
-	data: any
+	operation: string,
+	data: any,
+
 }

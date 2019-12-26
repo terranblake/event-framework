@@ -1,4 +1,5 @@
 import { Model } from "mongoose";
+import Job from "../classes/Job";
 
 export default interface Subscription {
 	name: string,
@@ -6,11 +7,7 @@ export default interface Subscription {
 	// define set of operations that can be used
 	operation: string,
 	// todo: define a model for jobs
-	handler: (job: any) => void,
-	filters: Array<SubscriptionFilter>,
+	handler: (job: Job) => void,
+	filters: Array<any>,
 	options: Object
-}
-
-export interface SubscriptionFilter {
-	// todo: define subscription filter interface
 }
