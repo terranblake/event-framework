@@ -97,15 +97,15 @@ export default class EventFramework {
 		for (let subscription of subscriptions) {
 			const namedQueue = new Bull(subscription.name);
 			logger.info(`created new named queue ${subscription.name} for operation ${subscription.operation} on model ${subscription.model.modelName}`);
-			
+
 			namedQueue.process(
 				async function (job: any) {
-					logger.info(`received job from ${subscription.name} with id ${job.id}`);
+					logger.info(`received job for ${subscription.name} with id ${job.id}`);
 					subscription.handler(job);
 				}
 			);
 
-			namedQueue.on('completed', (job, result) => logger.info)
+			// todo: add completed and failed handling listeners
 
 			this.queues.push(namedQueue);
 		}
@@ -114,7 +114,7 @@ export default class EventFramework {
 	private async createChangeStreams(subscriptions: Array<Subscription>) {
 		let collections = await mongoose.connection.db.listCollections().toArray();
 		collections = collections.map(c => c.name);
-	
+
 		for (let name of collections) {
 			// get service-defined subscriptions
 			const collectionSubscriptions = subscriptions.filter(s => String(pluralize(s.model.modelName)).toLowerCase() === name);
@@ -122,31 +122,36 @@ export default class EventFramework {
 				logger.info(`no subscriptions for collection ${name}`);
 				continue;
 			}
-	
+
 			// get instance of collection for creating change streams
 			const Collection = await mongoose.connection.db.collection(name);
-	
+
 			// todo: enable further filtering by operationType
 			// create a job object
 			// insert in jobs collection
 			// listen on jobs collection changes
 			// filter from there into the service
-	
+
 			// todo: group subscriptions by filter type
 			// pipelines have their own unique change streams
 			// regular mongo queries are either converted to pipelines
 			// 		or use the same change stream for receiving events
-	
+
 			// todo: remove duplicated change streams by comparing filters
 			// and simply add another handler for an existing change stream
-	
+
 			// todo: push all changes from every model into an event stream data model
-	
+
 			// create a change stream for each subscription
 			for (let { name, filters, handler, operation, options, model } of collectionSubscriptions) {
 				// create change stream
 				logger.info(`created new change stream ${name} for operation ${operation} on model ${model.modelName}`);
-				Collection.watch(filters, options).on(operation, handler);
+				Collection.watch(filters, options).on(operation,
+					async function (job) {
+						logger.info(`received job for ${name} from change stream`);
+						handler(job);
+					}
+				);
 			}
 		}
 	}

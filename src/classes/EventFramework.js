@@ -160,13 +160,13 @@ var EventFramework = /** @class */ (function () {
                     namedQueue.process(function (job) {
                         return __awaiter(this, void 0, void 0, function () {
                             return __generator(this, function (_a) {
-                                utils_1.logger.info("received job from " + subscription.name + " with id " + job.id);
+                                utils_1.logger.info("received job for " + subscription.name + " with id " + job.id);
                                 subscription.handler(job);
                                 return [2 /*return*/];
                             });
                         });
                     });
-                    namedQueue.on('completed', function (job, result) { return utils_1.logger.info; });
+                    // todo: add completed and failed handling listeners
                     this_1.queues.push(namedQueue);
                 };
                 this_1 = this;
@@ -190,7 +190,7 @@ var EventFramework = /** @class */ (function () {
                         collections = _a.sent();
                         collections = collections.map(function (c) { return c.name; });
                         _loop_2 = function (name_1) {
-                            var collectionSubscriptions, Collection, _i, collectionSubscriptions_1, _a, name_2, filters, handler, operation, options, model;
+                            var collectionSubscriptions, Collection, _loop_3, _i, collectionSubscriptions_1, _a, name_2, filters, handler, operation, options, model;
                             return __generator(this, function (_b) {
                                 switch (_b.label) {
                                     case 0:
@@ -202,6 +202,19 @@ var EventFramework = /** @class */ (function () {
                                         return [4 /*yield*/, mongoose.connection.db.collection(name_1)];
                                     case 1:
                                         Collection = _b.sent();
+                                        _loop_3 = function (name_2, filters, handler, operation, options, model) {
+                                            // create change stream
+                                            utils_1.logger.info("created new change stream " + name_2 + " for operation " + operation + " on model " + model.modelName);
+                                            Collection.watch(filters, options).on(operation, function (job) {
+                                                return __awaiter(this, void 0, void 0, function () {
+                                                    return __generator(this, function (_a) {
+                                                        utils_1.logger.info("received job for " + name_2 + " from change stream");
+                                                        handler(job);
+                                                        return [2 /*return*/];
+                                                    });
+                                                });
+                                            });
+                                        };
                                         // todo: enable further filtering by operationType
                                         // create a job object
                                         // insert in jobs collection
@@ -217,9 +230,7 @@ var EventFramework = /** @class */ (function () {
                                         // create a change stream for each subscription
                                         for (_i = 0, collectionSubscriptions_1 = collectionSubscriptions; _i < collectionSubscriptions_1.length; _i++) {
                                             _a = collectionSubscriptions_1[_i], name_2 = _a.name, filters = _a.filters, handler = _a.handler, operation = _a.operation, options = _a.options, model = _a.model;
-                                            // create change stream
-                                            utils_1.logger.info("created new change stream " + name_2 + " for operation " + operation + " on model " + model.modelName);
-                                            Collection.watch(filters, options).on(operation, handler);
+                                            _loop_3(name_2, filters, handler, operation, options, model);
                                         }
                                         return [2 /*return*/];
                                 }
