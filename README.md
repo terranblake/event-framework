@@ -1,20 +1,20 @@
-# Event-Framework
+# Events
 
-event-framework is a nodejs wrapper around MongoDB change streams to support per-Collection events based on a set of listeners with filters
+events is a nodejs wrapper around MongoDB change streams to support per-Collection events based on a set of listeners with filters
 
 ## Installation
 
-Use the package manager [npm](https://docs.npmjs.com/) to install event-framework.
+Use the package manager [npm](https://docs.npmjs.com/) to install events.
 
 ```bash
-npm install @postilion/event-framework
+npm install @postilion/events
 ```
 
 ## Usage
 
 1. Import the EventFramework constructor
 ```javascript
-import { EventFramework } from '@postilion/event-framework';
+import { EventFramework } from '@postilion/events';
 ```
 
 2. Define subscriptions with a model, operation, handler, filters and queue options
