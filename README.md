@@ -47,23 +47,43 @@ import { Events } from '@postilion/events';
 
 ##### 3. Open a connection with a mongodb client
 
-4. 
+4. Create a new instance of `Events` with `Subscriptions` and `EventOptions`
 ```javascript
-const events = new Events(subscriptions);
+const eventOptions: EventOptions = {
+  redis: 'redis://localhost:6379',
+  mongodb: 'mongodb://localhost:27017'
+}
+
+const events = new Events(subscriptions, eventOptions);
 ```
 
 5. Change a document in a collection you've created a subscription for
 ```javascript
-db.collection.insert({ ... })
+db.filing.insert({
+  _id: "5e06528b29734aab3823235d",
+  status: "unseeded",
+  company: "5e065276aeee4f3833517b6b",
+  publishedAt: "2019-02-01T01:22:40.000Z",
+  fiscalYearEnd: "1231-01-01T00:00:00.000Z",
+  source: "sec",
+  type: "10-K",
+  refId: "0001018724-19-000004",
+  period: "2018-12-31T00:00:00.000Z",
+  url: "https://www.sec.gov/Archives/edgar/data/1018724/000101872419000004/0001018724-19-000004-index.htm",
+  name: "Form 10-K",
+  filedAt: "2019-02-01T00:00:00.000Z",
+  acceptedAt: "2019-02-01T04:22:40.000Z",
+  __v: 0
+})
 ```
 
-6. The handler attached to each matching subscription should receive a job that matches the given filters and contains a Document of the `Model` specificed in the `Subscription.model` field
+6. The handler attached to each matching subscription should receive a Job that matches the given filters and contains a Document of the `Model` specificed in the `Subscription.model` field
 ```javascript
 {
   id: "cde20f20-28d9-11ea-9735-99b5e82d5a99",
   name: "GetFilingDocumentsForFiling",
   operation: "insert",
-  data: {
+  data: Job {
     _id: "5e06528b29734aab3823235d",
     status: "unseeded",
     company: "5e065276aeee4f3833517b6b",

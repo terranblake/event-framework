@@ -54,10 +54,14 @@ var utils_1 = require("@postilion/utils");
 var IOperation_1 = require("../enums/IOperation");
 var Job_1 = require("./Job");
 var Events = /** @class */ (function () {
-    function Events(subscriptions) {
+    function Events(subscriptions, options) {
         var _this = this;
-        this.url = String(process.env.MONGODB);
+        this.url = String();
         this.subscriptions = [];
+        this.options = {
+            redis: String(process.env.MONGODB || 'mongodb://localhost:27017/db'),
+            mongodb: String(process.env.REDIS) || 'redis://localhost:6379'
+        };
         this.RECONNECT_DELAY = 1000;
         this.DEFAULT_QUEUE_OPTIONS = {
             filters: [],
@@ -68,6 +72,9 @@ var Events = /** @class */ (function () {
         };
         this.reconnectMultiplier = 1;
         this.subscriptions = subscriptions;
+        // if the caller only defines 1 of the fields, then
+        // we want to use the default for the remaining fields
+        this.options = __assign(__assign({}, options), this.options);
         mongoose.connection.on('disconnected', function () {
             utils_1.logger.info(new Date(), 'disconnected from mongodb');
             _this.reconnect();
@@ -105,7 +112,7 @@ var Events = /** @class */ (function () {
                 switch (_a.label) {
                     case 0:
                         utils_1.logger.info(new Date(), 'connecting to mongodb');
-                        return [4 /*yield*/, mongoose.connect(this.url)["catch"](console.error)];
+                        return [4 /*yield*/, mongoose.connect(this.options.mongodb)["catch"](console.error)];
                     case 1:
                         _a.sent();
                         return [2 /*return*/];
@@ -188,8 +195,7 @@ var Events = /** @class */ (function () {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        // handle what to do when we haven't connected to
-                        // mongodb yet
+                        // handle what to do when we haven't connected to mongodb yet
                         if (mongoose.connection.readyState !== 1) {
                             return [2 /*return*/, this.reconnect()];
                         }
@@ -212,9 +218,9 @@ var Events = /** @class */ (function () {
             var name, operation, model, handler, namedQueue;
             return __generator(this, function (_a) {
                 name = subscription.name, operation = subscription.operation, model = subscription.model, handler = subscription.handler;
-                namedQueue = new Bull(name);
+                namedQueue = new Bull(name, this.options.redis);
                 utils_1.logger.info("created new named queue " + name + " for operation " + operation + " on model " + model.modelName);
-                namedQueue.process(function (job) {
+                namedQueue.process('*', function (job) {
                     return __awaiter(this, void 0, void 0, function () {
                         var jobData, formattedJob;
                         return __generator(this, function (_a) {

@@ -9,9 +9,18 @@ import { default as Subscription } from '../interfaces/ISubscription';
 import { default as Operation } from '../enums/IOperation';
 import Job from './Job';
 
+export interface EventsOptions {
+	redis: string;
+	mongodb: string;
+}
+
 export default class Events {
-	url: string = String(process.env.MONGODB);
+	url: string = String();
 	subscriptions: Array<Subscription> = [];
+	options: EventsOptions = {
+		redis: String(process.env.MONGODB || 'mongodb://localhost:27017/db'),
+		mongodb: String(process.env.REDIS) || 'redis://localhost:6379'
+	};
 
 	readonly RECONNECT_DELAY: number = 1000;
 	readonly DEFAULT_QUEUE_OPTIONS: object = {
@@ -25,8 +34,12 @@ export default class Events {
 	private reconnectMultiplier: number = 1;
 	private latestMongoError: Error;
 
-	constructor(subscriptions: Array<Subscription>) {
+	constructor(subscriptions: Array<Subscription>, options: EventsOptions) {
 		this.subscriptions = subscriptions;
+
+		// if the caller only defines 1 of the fields, then
+		// we want to use the default for the remaining fields
+		this.options = { ...options, ...this.options};
 
 		mongoose.connection.on('disconnected', () => {
 			logger.info(new Date(), 'disconnected from mongodb');
@@ -56,7 +69,7 @@ export default class Events {
 	// a disconnected state without crashing anything
 	private async connect() {
 		logger.info(new Date(), 'connecting to mongodb');
-		await mongoose.connect(this.url).catch(console.error);
+		await mongoose.connect(this.options.mongodb).catch(console.error);
 	}
 
 	reconnect() {
@@ -121,14 +134,16 @@ export default class Events {
 	}
 
 	private async subscribe(subscription: Subscription) {
-		// handle what to do when we haven't connected to
-		// mongodb yet
+		// handle what to do when we haven't connected to mongodb yet
 		if (mongoose.connection.readyState !== 1) {
 			return this.reconnect();
 		}
 
+		// named queues are backed by Bull queues
 		if (subscription.operation === Operation.named) {
 			await this.createNamedQueue(subscription);
+		// and every other queue is a thin layer over mongodb change streams
+		// todo: pass all change events to a collection 
 		} else {
 			await this.createChangeStream(subscription);
 		}
@@ -137,10 +152,10 @@ export default class Events {
 	private async createNamedQueue(subscription: Subscription) {
 		const { name, operation, model, handler } = subscription;
 
-		const namedQueue = new Bull(name);
+		const namedQueue = new Bull(name, this.options.redis);
 		logger.info(`created new named queue ${name} for operation ${operation} on model ${model.modelName}`);
 
-		namedQueue.process(
+		namedQueue.process('*',
 			async function (job: any) {
 				const jobData = JSON.parse(JSON.stringify(job.data));
 				const formattedJob = new Job(name, model, operation, jobData);
