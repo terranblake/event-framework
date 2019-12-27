@@ -15,7 +15,7 @@ var Job = /** @class */ (function () {
         return uuid.v1();
     };
     // get the date from the provided id
-    Job.createdAt = function (id) {
+    Job.prototype.createdAt = function (id) {
         return new Date(uuidTime.v1(id));
     };
     return Job;

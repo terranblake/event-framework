@@ -162,7 +162,10 @@ var EventFramework = /** @class */ (function () {
             // filters that have nested expressions
             for (var _i = 0, _a = Object.keys(expression); _i < _a.length; _i++) {
                 var field = _a[_i];
-                if (field.includes('fullDocument')) {
+                // todo: remove this because it could cause bugs in the future
+                // if models have a field called operation. this would break
+                // all event listeners who try to filter using this
+                if (['fullDocument'].includes(field)) {
                     continue;
                 }
                 var value = filters[i][expressions[0]][field];
@@ -258,7 +261,6 @@ var EventFramework = /** @class */ (function () {
                                     case 0:
                                         collectionSubscriptions = subscriptions.filter(function (s) { return String(pluralize(s.model.modelName)).toLowerCase() === name_2; });
                                         if (!collectionSubscriptions.length) {
-                                            utils_1.logger.info("no subscriptions for collection " + name_2);
                                             return [2 /*return*/, "continue"];
                                         }
                                         return [4 /*yield*/, mongoose.connection.db.collection(name_2)];
@@ -272,9 +274,16 @@ var EventFramework = /** @class */ (function () {
                                             // reformat raw filters to use the format `fullDocument.FIELD`
                                             // since mongodb isn't smart enough to figure out how to do that?
                                             filters = EventFramework.convertFiltersToPipeline(filters);
+                                            // add the operation type filtering to the beginning of the pipeline
+                                            // since it has the lowest computational complexity
+                                            filters.unshift({
+                                                $match: {
+                                                    operationType: operation
+                                                }
+                                            });
                                             // create change stream
                                             utils_1.logger.info("created new change stream " + name_3 + " with filters " + JSON.stringify(filters));
-                                            Collection.watch(filters, streamOptions).on(operation, function (job) {
+                                            Collection.watch(filters, streamOptions).on('change', function (job) {
                                                 return __awaiter(this, void 0, void 0, function () {
                                                     var jobData, formattedJob;
                                                     return __generator(this, function (_a) {

@@ -1,7 +1,7 @@
 enum Operation {
-	create = "change",
-	update = "change",
-	delete = "change",
+	create = "insert",
+	update = "update",
+	delete = "delete",
 	// queue that isn't based
 	// on a Document being modified
 	named = "named"

@@ -2,9 +2,9 @@
 exports.__esModule = true;
 var Operation;
 (function (Operation) {
-    Operation["create"] = "change";
-    Operation["update"] = "change";
-    Operation["delete"] = "change";
+    Operation["create"] = "insert";
+    Operation["update"] = "update";
+    Operation["delete"] = "delete";
     // queue that isn't based
     // on a Document being modified
     Operation["named"] = "named";

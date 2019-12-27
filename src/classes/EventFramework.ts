@@ -107,7 +107,10 @@ export default class EventFramework {
 			// todo: add support for more complex
 			// filters that have nested expressions
 			for (let field of Object.keys(expression)) {
-				if (field.includes('fullDocument')) {
+				// todo: remove this because it could cause bugs in the future
+				// if models have a field called operation. this would break
+				// all event listeners who try to filter using this
+				if (['fullDocument'].includes(field)) {
 					continue;
 				}
 		
@@ -172,7 +175,6 @@ export default class EventFramework {
 			// get service-defined subscriptions
 			const collectionSubscriptions = subscriptions.filter(s => String(pluralize(s.model.modelName)).toLowerCase() === name);
 			if (!collectionSubscriptions.length) {
-				logger.info(`no subscriptions for collection ${name}`);
 				continue;
 			}
 
@@ -210,9 +212,17 @@ export default class EventFramework {
 				// since mongodb isn't smart enough to figure out how to do that?
 				filters = EventFramework.convertFiltersToPipeline(filters);
 
+				// add the operation type filtering to the beginning of the pipeline
+				// since it has the lowest computational complexity
+				filters.unshift({
+					$match: {
+						operationType: operation
+					}
+				});
+
 				// create change stream
 				logger.info(`created new change stream ${name} with filters ${JSON.stringify(filters)}`);
-				Collection.watch(filters, streamOptions).on(operation,
+				Collection.watch(filters, streamOptions).on('change',
 					async function (job: any) {
 						if (!job.fullDocument) {
 							throw new Error(`change stream job was missing reference to fullDocument. failing immediately`);

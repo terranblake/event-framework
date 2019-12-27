@@ -1,5 +1,4 @@
 import { Model } from "mongoose";
-import Operation from "../enums/IOperation";
 
 export default interface Job {
 	id: string,
