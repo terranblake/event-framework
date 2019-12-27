@@ -1,6 +1,6 @@
 # Events
 
-events is a nodejs wrapper around MongoDB change streams to support per-Collection events based on a set of listeners with filters
+##### events is a wrapper around MongoDB change streams (per-Collection event listening) and Bull queues (scheduled jobs with per-collection querying) to support event subscriptions for simple or complex interactions between services
 
 ## Installation
 
@@ -12,18 +12,15 @@ npm install @postilion/events
 
 ## Usage
 
-1. Import the EventFramework constructor
+1. Import the Events constructor
 ```javascript
-import { EventFramework } from '@postilion/events';
+import { Events } from '@postilion/events';
 ```
 
 2. Define subscriptions with a model, operation, handler, filters and queue options
 ```javascript
-const subscriptions: Array<Subscription> = [
+[
     {
-		// a named subscription is one used by a scheduled job that
-		// runs at periodic intervals or is manually pushed to from
-		// another queue
         name: 'SyncFilingsByTicker',
         model: models.Company,
         operation: Operation.named,
@@ -32,9 +29,6 @@ const subscriptions: Array<Subscription> = [
         options: {}
     },
     {
-		// a collection-based subscription listens for a change to
-		// the model with an operationType that matches this operation
-		// and meets the filters/pipeline query
         name: 'GetFilingDocumentsForFiling',
         model: models.Filing,
         operation: Operation.create,
@@ -48,20 +42,22 @@ const subscriptions: Array<Subscription> = [
         ],
         options: {}
     }
-];
+]
 ```
 
-3. Pass your connection string and subscriptions to the event framework constructor
+##### 3. Open a connection with a mongodb client
+
+4. 
 ```javascript
-const eventFramework = new EventFramework('mongodb://user:pass@localhost/db', subscriptions);
+const events = new Events(subscriptions);
 ```
 
-4. Change a document in a collection you've created a subscription for
+5. Change a document in a collection you've created a subscription for
 ```javascript
 db.collection.insert({ ... })
 ```
 
-5. The handler attached to each matching subscription should receive an event
+6. The handler attached to each matching subscription should receive a job that matches the given filters and contains a Document of the `Model` specificed in the `Subscription.model` field
 ```javascript
 {
   id: "cde20f20-28d9-11ea-9735-99b5e82d5a99",
