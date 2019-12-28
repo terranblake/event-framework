@@ -45,9 +45,15 @@ import { Events } from '@postilion/events';
 ]
 ```
 
-##### 3. Open a connection with a mongodb client
+3. Open a connection with a mongodb client
+```javascript
+const mongoose = require('mongoose');
+mongoose.connect('mongodb://localhost/db');
+```
 
-4. Create a new instance of `Events` with `Subscriptions` and `EventOptions`
+4. Make sure that your redis instance is running
+
+5. Create a new instance of `Events` with `Subscriptions` and `EventOptions`
 ```javascript
 const eventOptions: EventOptions = {
   redis: 'redis://localhost:6379',
@@ -57,7 +63,7 @@ const eventOptions: EventOptions = {
 const events = new Events(subscriptions, eventOptions);
 ```
 
-5. Change a document in a collection you've created a subscription for
+6. Change a document in a collection you've created a subscription for
 ```javascript
 db.filing.insert({
   _id: "5e06528b29734aab3823235d",
@@ -77,7 +83,7 @@ db.filing.insert({
 })
 ```
 
-6. The handler attached to each matching subscription should receive a Job that matches the given filters and contains a Document of the `Model` specificed in the `Subscription.model` field
+7. The handler attached to each matching subscription should receive a Job that matches the given filters and contains a Document of the `Model` specificed in the `Subscription.model` field
 ```javascript
 {
   id: "cde20f20-28d9-11ea-9735-99b5e82d5a99",
