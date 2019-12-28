@@ -1,5 +1,4 @@
 import * as mongoose from 'mongoose';
-import { Queue } from 'bull';
 
 const Bull = require('bull');
 const pluralize = require('pluralize');
@@ -7,12 +6,9 @@ const pluralize = require('pluralize');
 import { logger } from '@postilion/utils';
 import { default as Subscription } from '../interfaces/ISubscription';
 import { default as Operation } from '../enums/IOperation';
-import Job from './Job';
+import { default as EventsOptions } from '../interfaces/IEventsOptions';
 
-export interface EventsOptions {
-	redis: string;
-	mongodb: string;
-}
+import Job from './Job';
 
 export default class Events {
 	url: string = String();
@@ -150,9 +146,9 @@ export default class Events {
 	}
 
 	private async createNamedQueue(subscription: Subscription) {
-		const { name, operation, model, handler } = subscription;
+		const { name, operation, model, handler, options } = subscription;
 
-		const namedQueue = new Bull(name, this.options.redis);
+		const namedQueue = new Bull(name, options.redis || this.options.redis);
 		logger.info(`created new named queue ${name} for operation ${operation} on model ${model.modelName}`);
 
 		namedQueue.process('*',

@@ -1,5 +1,6 @@
 import { Model } from "mongoose";
 import Job from "../classes/Job";
+import { default as EventsOptions } from './IEventsOptions';
 
 export default interface Subscription {
 	name: string,
@@ -9,5 +10,5 @@ export default interface Subscription {
 	// todo: define a model for jobs
 	handler: (job: Job) => void,
 	filters: Array<any>,
-	options: Object
+	options: EventsOptions
 }

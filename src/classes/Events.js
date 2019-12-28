@@ -215,10 +215,10 @@ var Events = /** @class */ (function () {
     };
     Events.prototype.createNamedQueue = function (subscription) {
         return __awaiter(this, void 0, void 0, function () {
-            var name, operation, model, handler, namedQueue;
+            var name, operation, model, handler, options, namedQueue;
             return __generator(this, function (_a) {
-                name = subscription.name, operation = subscription.operation, model = subscription.model, handler = subscription.handler;
-                namedQueue = new Bull(name, this.options.redis);
+                name = subscription.name, operation = subscription.operation, model = subscription.model, handler = subscription.handler, options = subscription.options;
+                namedQueue = new Bull(name, options.redis || this.options.redis);
                 utils_1.logger.info("created new named queue " + name + " for operation " + operation + " on model " + model.modelName);
                 namedQueue.process('*', function (job) {
                     return __awaiter(this, void 0, void 0, function () {
