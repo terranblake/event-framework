@@ -1,20 +1,20 @@
-# Events
+# PubSub
 
-##### events is a wrapper around MongoDB change streams (per-Collection event listening) and Bull queues (scheduled jobs with per-collection querying) to support event subscriptions for simple or complex interactions between services
+##### pubsub is a wrapper around MongoDB change streams (per-Collection event listening) and Bull queues (scheduled jobs with per-collection querying) to support event subscriptions for simple or complex interactions between services
 
 ## Installation
 
 Use the package manager [npm](https://docs.npmjs.com/) to install events.
 
 ```bash
-npm install @postilion/events
+npm install @postilion/pubsub
 ```
 
 ## Usage
 
-1. Import the Events constructor
+1. Import the PubSub constructor
 ```javascript
-import { Events } from '@postilion/events';
+import { PubSub } from '@postilion/pubsub';
 ```
 
 2. Define subscriptions with a model, operation, handler, filters and queue options
@@ -53,14 +53,14 @@ mongoose.connect('mongodb://localhost/db');
 
 4. Make sure that your redis instance is running
 
-5. Create a new instance of `Events` with `Subscriptions` and `EventOptions`
+5. Create a new instance of `PubSub` with `Subscriptions` and `PubSubOptions`
 ```javascript
-const eventOptions: EventOptions = {
+const pubsubOptions: PubSubOptions = {
   redis: 'redis://localhost:6379',
   mongodb: 'mongodb://localhost:27017'
 }
 
-const events = new Events(subscriptions, eventOptions);
+const pubsub = new PubSub(subscriptions, pubsubOptions);
 ```
 
 6. Change a document in a collection you've created a subscription for
