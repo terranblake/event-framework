@@ -226,7 +226,7 @@ var PubSub = /** @class */ (function () {
                         return __generator(this, function (_a) {
                             jobData = JSON.parse(JSON.stringify(job.data));
                             formattedJob = new Job_1["default"](name, model, operation, jobData);
-                            utils_1.logger.info("received job for " + name + " from named queue");
+                            utils_1.logger.info("received job id " + formattedJob.id + " for " + name + " from named queue");
                             handler(formattedJob);
                             return [2 /*return*/];
                         });
@@ -269,7 +269,7 @@ var PubSub = /** @class */ (function () {
                                     }
                                     jobData = JSON.parse(JSON.stringify(job.fullDocument));
                                     formattedJob = new Job_1["default"](name, model, operation, jobData);
-                                    utils_1.logger.info("received job for " + name + " from change stream");
+                                    utils_1.logger.info("received job id " + formattedJob.id + " for " + name + " from change stream");
                                     handler(formattedJob);
                                     return [2 /*return*/];
                                 });

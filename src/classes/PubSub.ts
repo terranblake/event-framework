@@ -156,7 +156,7 @@ export default class PubSub {
 				const jobData = JSON.parse(JSON.stringify(job.data));
 				const formattedJob = new Job(name, model, operation, jobData);
 
-				logger.info(`received job for ${name} from named queue`);
+				logger.info(`received job id ${formattedJob.id} for ${name} from named queue`);
 				handler(formattedJob);
 			}
 		);
@@ -202,7 +202,7 @@ export default class PubSub {
 				const jobData = JSON.parse(JSON.stringify(job.fullDocument));
 				const formattedJob = new Job(name, model, operation, jobData);
 
-				logger.info(`received job for ${name} from change stream`);
+				logger.info(`received job id ${formattedJob.id} for ${name} from change stream`);
 				handler(formattedJob);
 			}
 		);
