@@ -6,14 +6,14 @@ const pluralize = require('pluralize');
 import { logger } from '@postilion/utils';
 import { default as Subscription } from '../interfaces/ISubscription';
 import { default as Operation } from '../enums/IOperation';
-import { default as EventsOptions } from '../interfaces/IEventsOptions';
+import { default as PubSubOptions } from '../interfaces/IPubSubOptions';
 
 import Job from './Job';
 
-export default class Events {
+export default class PubSub {
 	url: string = String();
 	subscriptions: Array<Subscription> = [];
-	options: EventsOptions = {
+	options: PubSubOptions = {
 		redis: String(process.env.MONGODB || 'mongodb://localhost:27017/db'),
 		mongodb: String(process.env.REDIS) || 'redis://localhost:6379'
 	};
@@ -30,7 +30,7 @@ export default class Events {
 	private reconnectMultiplier: number = 1;
 	private latestMongoError: Error;
 
-	constructor(subscriptions: Array<Subscription>, options: EventsOptions) {
+	constructor(subscriptions: Array<Subscription>, options: PubSubOptions) {
 		this.subscriptions = subscriptions;
 
 		// if the caller only defines 1 of the fields, then
@@ -181,7 +181,7 @@ export default class Events {
 
 		// reformat raw filters to use the format `fullDocument.FIELD`
 		// since mongodb isn't smart enough to figure out how to do that?
-		filters = Events.convertFiltersToPipeline(filters);
+		filters = PubSub.convertFiltersToPipeline(filters);
 
 		// add the operation type filtering to the beginning of the pipeline
 		// since it has the lowest computational complexity

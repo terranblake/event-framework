@@ -1,7 +1,7 @@
 {
-  "name": "@postilion/events",
+  "name": "@postilion/pubsub",
   "version": "1.4.1",
-  "description": "event-framework is a nodejs wrapper around MongoDB change streams to support per-collection events based on listeners which define a handler for the event and a set of filters to limit the events to exactly what the handler was built for",
+  "description": "pubsub is a nodejs wrapper around MongoDB change streams to support per-collection events based on listeners which define a handler for the event and a set of filters to limit the events to exactly what the handler was built for",
   "repository": "@postilion/events",
   "main": "build/index.js",
   "module": "build/index.es.js",

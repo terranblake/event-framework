@@ -53,8 +53,8 @@ var pluralize = require('pluralize');
 var utils_1 = require("@postilion/utils");
 var IOperation_1 = require("../enums/IOperation");
 var Job_1 = require("./Job");
-var Events = /** @class */ (function () {
-    function Events(subscriptions, options) {
+var PubSub = /** @class */ (function () {
+    function PubSub(subscriptions, options) {
         var _this = this;
         this.url = String();
         this.subscriptions = [];
@@ -85,7 +85,7 @@ var Events = /** @class */ (function () {
         });
         this.start();
     }
-    Events.prototype.start = function () {
+    PubSub.prototype.start = function () {
         return __awaiter(this, void 0, void 0, function () {
             return __generator(this, function (_a) {
                 switch (_a.label) {
@@ -106,7 +106,7 @@ var Events = /** @class */ (function () {
     // should be managed by the stores module. all modules
     // which use any of the stores should gracefully handle
     // a disconnected state without crashing anything
-    Events.prototype.connect = function () {
+    PubSub.prototype.connect = function () {
         return __awaiter(this, void 0, void 0, function () {
             return __generator(this, function (_a) {
                 switch (_a.label) {
@@ -120,7 +120,7 @@ var Events = /** @class */ (function () {
             });
         });
     };
-    Events.prototype.reconnect = function () {
+    PubSub.prototype.reconnect = function () {
         var _this = this;
         setTimeout(function () {
             if (mongoose.connection.readyState === 1) {
@@ -139,7 +139,7 @@ var Events = /** @class */ (function () {
             });
         }, this.RECONNECT_DELAY * this.reconnectMultiplier);
     };
-    Events.convertFiltersToPipeline = function (filters) {
+    PubSub.convertFiltersToPipeline = function (filters) {
         if (!filters.length) {
             return [];
         }
@@ -167,7 +167,7 @@ var Events = /** @class */ (function () {
         }
         return filters;
     };
-    Events.prototype.createSubscriptions = function () {
+    PubSub.prototype.createSubscriptions = function () {
         return __awaiter(this, void 0, void 0, function () {
             var _i, _a, subscription;
             return __generator(this, function (_b) {
@@ -190,7 +190,7 @@ var Events = /** @class */ (function () {
             });
         });
     };
-    Events.prototype.subscribe = function (subscription) {
+    PubSub.prototype.subscribe = function (subscription) {
         return __awaiter(this, void 0, void 0, function () {
             return __generator(this, function (_a) {
                 switch (_a.label) {
@@ -213,7 +213,7 @@ var Events = /** @class */ (function () {
             });
         });
     };
-    Events.prototype.createNamedQueue = function (subscription) {
+    PubSub.prototype.createNamedQueue = function (subscription) {
         return __awaiter(this, void 0, void 0, function () {
             var name, operation, model, handler, options, namedQueue;
             return __generator(this, function (_a) {
@@ -236,7 +236,7 @@ var Events = /** @class */ (function () {
             });
         });
     };
-    Events.prototype.createChangeStream = function (subscription) {
+    PubSub.prototype.createChangeStream = function (subscription) {
         return __awaiter(this, void 0, void 0, function () {
             var name, filters, handler, operation, options, model, pluralName, Collection, streamOptions;
             return __generator(this, function (_a) {
@@ -250,7 +250,7 @@ var Events = /** @class */ (function () {
                         streamOptions = __assign(__assign(__assign({}, this.DEFAULT_QUEUE_OPTIONS), options), this.MANDATORY_STREAM_OPTIONS);
                         // reformat raw filters to use the format `fullDocument.FIELD`
                         // since mongodb isn't smart enough to figure out how to do that?
-                        filters = Events.convertFiltersToPipeline(filters);
+                        filters = PubSub.convertFiltersToPipeline(filters);
                         // add the operation type filtering to the beginning of the pipeline
                         // since it has the lowest computational complexity
                         filters.unshift({
@@ -280,6 +280,6 @@ var Events = /** @class */ (function () {
             });
         });
     };
-    return Events;
+    return PubSub;
 }());
-exports["default"] = Events;
+exports["default"] = PubSub;
