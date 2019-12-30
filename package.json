@@ -1,6 +1,6 @@
 {
   "name": "@postilion/pubsub",
-  "version": "1.4.2",
+  "version": "1.4.3",
   "description": "pubsub is a nodejs wrapper around MongoDB change streams to support per-collection events based on listeners which define a handler for the event and a set of filters to limit the events to exactly what the handler was built for",
   "repository": "@postilion/events",
   "main": "build/index.js",
@@ -24,9 +24,21 @@
     "build": "tsc ./index.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "lint-staged": {
+    "*.js": [
+      "eslint --fix",
+      "git add"
+    ]
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "tsc ./index.ts"
+    }
+  },
   "devDependencies": {
     "@types/bull": "^3.10.6",
     "@types/mongoose": "^5.5.34",
+    "husky": "^3.1.0",
     "typescript": "^3.7.4"
   },
   "author": "",
