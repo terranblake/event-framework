@@ -14,8 +14,8 @@ export default class PubSub {
 	url: string = String();
 	subscriptions: Array<Subscription> = [];
 	options: PubSubOptions = {
-		redis: String(process.env.MONGODB || 'mongodb://localhost:27017/db'),
-		mongodb: String(process.env.REDIS) || 'redis://localhost:6379'
+		mongodb: String(process.env.MONGODB || 'mongodb://localhost:27017/db'),
+		redis: String(process.env.REDIS) || 'redis://localhost:6379'
 	};
 
 	readonly RECONNECT_DELAY: number = 1000;
